@@ -15,15 +15,13 @@ import java.util.Date;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
+
 import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
 import javax.management.openmbean.CompositeDataSupport;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
-
-import music.penguin.utils.mail.MailNotify;
-import music.penguin.utils.twitter.TwitterNotify;
 
 /**
  *
@@ -37,8 +35,8 @@ public class JConsoleM {
     private String host;
     private String port;
     private String dir;
-    private MailNotify mn;
-    private TwitterNotify tw;
+//    private MailNotify mn;
+//    private TwitterNotify tw;
     private Properties conf;
     public String[] stats;
 
@@ -134,18 +132,18 @@ public class JConsoleM {
         mbsc = jmxc.getMBeanServerConnection();
         ncpu = getAvailableProcessors();
         stats = new String[8];
-        mn = new MailNotify(conf.getProperty("mail.smtp"),
-                conf.getProperty("mail.sender"));
-        int interval = Integer.parseInt(conf.getProperty("mail.interval"));
-        boolean auth = Boolean.parseBoolean(conf.getProperty("mail.auth"));
-        if( auth ) {
-            mn.setAuth(true);
-            mn.setUser(conf.getProperty("mail.user"));
-            mn.setPassword(conf.getProperty("mail.password"));
-        }
-        interval = interval * 60;
-        mn.setMinTime(interval);
-        tw = new TwitterNotify(conf);
+//        mn = new MailNotify(conf.getProperty("mail.smtp"),
+//                conf.getProperty("mail.sender"));
+//        int interval = Integer.parseInt(conf.getProperty("mail.interval"));
+//        boolean auth = Boolean.parseBoolean(conf.getProperty("mail.auth"));
+//        if( auth ) {
+//            mn.setAuth(true);
+//            mn.setUser(conf.getProperty("mail.user"));
+//            mn.setPassword(conf.getProperty("mail.password"));
+//        }
+//        interval = interval * 60;
+//        mn.setMinTime(interval);
+//        tw = new TwitterNotify(conf);
     }
 
     public static JConsoleM getInstance(String host, String port, Properties conf) {
@@ -301,12 +299,12 @@ public class JConsoleM {
                 sb.append("Thread " + dl[i] + "\n");
             }
             // Send Email
-            mn.setSubject("Dead Lock Thread Detected " + host);
-            tw.update("Dead Lock Thread Detected " + host); // Notify Twitter
-            String r[] = getRcptList(conf);
-            mn.setMessage(sb.toString());
-            mn.setReceipient(r);
-            mn.sendMail();
+            //mn.setSubject("Dead Lock Thread Detected " + host);
+            //tw.update("Dead Lock Thread Detected " + host); // Notify Twitter
+//            String r[] = getRcptList(conf);
+            //mn.setMessage(sb.toString());
+            //mn.setReceipient(r);
+            //mn.sendMail();
         }
     }
 
