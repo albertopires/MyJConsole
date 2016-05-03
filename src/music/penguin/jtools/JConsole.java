@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package music.penguin.jtools;
 
 import java.io.FileWriter;
@@ -20,7 +16,7 @@ import javax.management.openmbean.CompositeDataSupport;
 
 /**
  *
- * @author alberto
+ * @author Alberto Pires de Oliveira Neto
  */
 public class JConsole {
 
