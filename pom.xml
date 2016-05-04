@@ -22,7 +22,7 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>music.penguin.jtools.JConsoleM</mainClass>
+							<mainClass>io.github.albertopires.mjc.JConsoleM</mainClass>
 						</manifest>
 					</archive>
 				</configuration>
