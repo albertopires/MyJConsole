@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package music.penguin.jtools;
+package io.github.albertopires.mjc;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -46,13 +46,12 @@ public class JConsoleM {
 	private String host;
 	private String port;
 	private String dir;
-	private Properties conf;
 	public String[] stats;
 
 	public static void main(String[] args) throws Exception {
 		System.err.println("Length " + args.length);
 		if ((args.length != 1)) {
-			System.err.println("JMX Monitor v1.2e - 25/Jul/2011");
+			System.err.println("JMX Monitor v1.0.0 - 03/May/2016");
 			System.err.println("Parameters: <config_file>\n");
 			System.err.println("Fields:");
 			System.err.println("0 - TimeStamp");
@@ -76,7 +75,7 @@ public class JConsoleM {
 			port = p.getProperty("port." + i);
 			logDir = p.getProperty("dir." + i);
 			i++;
-			System.err.println("Host " + host);
+			System.err.println("Host " + host +":"+port);
 			if (host == null)
 				break;
 			li = new LogInvoker(host, port, logDir, p);
@@ -135,7 +134,6 @@ public class JConsoleM {
 			throws Exception {
 		this.host = host;
 		this.port = port;
-		this.conf = conf;
 		String urlStr = "service:jmx:rmi:///jndi/rmi://" + host + ":" + port + "/jmxrmi";
 		JMXServiceURL url = new JMXServiceURL(urlStr);
 		JMXConnector jmxc = JMXConnectorFactory.connect(url, null);
