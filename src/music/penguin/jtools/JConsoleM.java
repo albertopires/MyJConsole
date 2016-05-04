@@ -37,7 +37,7 @@ public class JConsoleM {
     private String dir;
 //    private MailNotify mn;
 //    private TwitterNotify tw;
-    private Properties conf;
+//    private Properties conf;
     public String[] stats;
 
     public static void main(String[] args) throws Exception {
@@ -111,6 +111,7 @@ public class JConsoleM {
                     line.append("\n");
                     jc.logToFile(line.toString());
                 } catch (Exception e) {
+                	e.printStackTrace();
                     System.err.println("Loop Exception : " + e.getMessage());
                     jc = getInstance(args[0], args[1], conf);
                     jc.setDir(args[2]);
@@ -122,10 +123,10 @@ public class JConsoleM {
         }
     }
 
-    private JConsoleM(String host, String port, Properties conf) throws Exception {
+    private JConsoleM(String host, String port) throws Exception {
         this.host = host;
         this.port = port;
-        this.conf = conf;
+//        this.conf = conf;
         String urlStr = "service:jmx:rmi:///jndi/rmi://" + host + ":" + port + "/jmxrmi";
         JMXServiceURL url = new JMXServiceURL(urlStr);
         JMXConnector jmxc = JMXConnectorFactory.connect(url, null);
@@ -151,7 +152,7 @@ public class JConsoleM {
 
         while (jc == null) {
             try {
-                jc = new JConsoleM(host, port, conf);
+                jc = new JConsoleM(host, port);
             } catch (Exception ex) {
                 jc = null;
             }
