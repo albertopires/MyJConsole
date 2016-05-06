@@ -5,12 +5,13 @@ The idea of MyJConsole is to collect the same data as the standard java **jconso
 
 ## How it works ##
 
-It's quite simple, you just run the **JConsoleM** class using a configuration file as parameter. 
+It's quite simple, you just run the **JConsoleM** class using a configuration file as parameter.
 The configuration file is quite simple and you can build one from the file **sample.conf**.
 The mbeans will be written to a file name ipaddr_port_YYYYMMDD and the columns are:
 
 
-```Fields:
+```
+Fields:
 0 - TimeStamp
 1 - CPU Usage
 2 - Heap Usage
@@ -19,7 +20,8 @@ The mbeans will be written to a file name ipaddr_port_YYYYMMDD and the columns a
 5 - CMS Usage
 6 - Par Eden Usage
 7 - Non-Heap Usage
-8 - CMS Usage Threshold Count```
+8 - CMS Usage Threshold Count
+```
 
 
 ## Requirements ##
