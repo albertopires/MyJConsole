@@ -44,7 +44,7 @@ public class JConsoleM {
 	private String port;
 	private String dir;
 	public String[] stats;
-	
+
 	/**
 	 * Create a monitor instance (JConsoleM) for each pair host:port and save collected data to it's respective log file.
 	 * @param args

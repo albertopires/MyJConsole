@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.util.Properties;
 
 public class Main {
-	
+
 	public static void main(String[] args) {
 		if ((args.length != 1)) {
 			System.err.println("JMX Monitor v1.0.1 - 06/May/2016");
@@ -38,7 +38,7 @@ public class Main {
 			System.err.println("8 - CMS Usage Threshold Count\n");
 			System.exit(1);
 		}
-		
+
 		Properties jvmToMonitor = loadConfig(args[0]);
 		int i = 0;
 		String host, port, logDir;
@@ -55,7 +55,7 @@ public class Main {
 			new Thread(li).start();
 		}
 	}
-	
+
 	private static Properties loadConfig(String confFile) {
 		File f = new File(confFile);
 
