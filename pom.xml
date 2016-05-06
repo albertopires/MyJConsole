@@ -22,7 +22,7 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>io.github.albertopires.mjc.JConsoleM</mainClass>
+							<mainClass>io.github.albertopires.mjc.Main</mainClass>
 						</manifest>
 					</archive>
 				</configuration>
