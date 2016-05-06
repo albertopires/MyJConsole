@@ -113,13 +113,13 @@ public class JConsoleM {
 				System.err.println("InterruptedException : " + ex.getMessage());
 			}
 		}
-		
+
 		return jc;
 	}
 
 	/**
 	 * Write a line with the data columns to host_port_date file. It creates one file per day.
-	 * 
+	 *
 	 * @param line
 	 */
 	public void logToFile(String line) {
