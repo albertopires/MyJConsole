@@ -17,7 +17,6 @@ package io.github.albertopires.mjc;
 
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
@@ -46,6 +45,12 @@ public class JConsoleM {
 	private String dir;
 	public String[] stats;
 	
+	/**
+	 * Create a monitor instance (JConsoleM) for each pair host:port and save collected data to it's respective log file.
+	 * @param args
+	 * @param conf
+	 * @throws Exception
+	 */
 	public static void jvmLog(String[] args, Properties conf) throws Exception {
 		JConsoleM jc;
 		StringBuffer line;
@@ -92,6 +97,9 @@ public class JConsoleM {
 	public static JConsoleM getInstance(String host, String port, Properties conf) {
 		JConsoleM jc = null;
 
+		// At the time the instance is created, it is possible that the jvm to monitored is offline.
+		// In that case the connection will fail, if that happens wait 10 seconds and try again until
+		// a successful connection is obtained.
 		while (jc == null) {
 			try {
 				jc = new JConsoleM(host, port, conf);
@@ -105,9 +113,15 @@ public class JConsoleM {
 				System.err.println("InterruptedException : " + ex.getMessage());
 			}
 		}
+		
 		return jc;
 	}
 
+	/**
+	 * Write a line with the data columns to host_port_date file. It creates one file per day.
+	 * 
+	 * @param line
+	 */
 	public void logToFile(String line) {
 		Calendar c = Calendar.getInstance();
 		String name = dir + "/" + host + "_" + port + "_" + c.get(Calendar.YEAR);
@@ -241,21 +255,6 @@ public class JConsoleM {
 				sb.append("Thread " + dl[i] + "\n");
 			}
 		}
-	}
-
-	public String[] getRcptList(Properties conf) {
-		int i = 0;
-		String addr;
-		ArrayList<String> addrList = new ArrayList<String>();
-		while (true) {
-			addr = conf.getProperty("mail.rcpto." + i);
-			i++;
-			if (addr != null)
-				addrList.add(addr);
-			if (addr == null)
-				break;
-		}
-		return addrList.toArray(new String[0]);
 	}
 
 	public void showInfo() throws Exception {
