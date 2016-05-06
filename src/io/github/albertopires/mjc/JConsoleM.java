@@ -51,7 +51,7 @@ public class JConsoleM {
 	public static void main(String[] args) throws Exception {
 		System.err.println("Length " + args.length);
 		if ((args.length != 1)) {
-			System.err.println("JMX Monitor v1.0.0 - 03/May/2016");
+			System.err.println("JMX Monitor v1.0.1 - 05/May/2016");
 			System.err.println("Parameters: <config_file>\n");
 			System.err.println("Fields:");
 			System.err.println("0 - TimeStamp");
@@ -66,19 +66,19 @@ public class JConsoleM {
 			System.exit(1);
 		}
 
-		Properties p = loadConfig(args[0]);
+		Properties jvmToMonitor = loadConfig(args[0]);
 		int i = 0;
 		String host, port, logDir;
 		LogInvoker li;
 		while (true) {
-			host = p.getProperty("host." + i);
-			port = p.getProperty("port." + i);
-			logDir = p.getProperty("dir." + i);
+			host = jvmToMonitor.getProperty("host." + i);
+			port = jvmToMonitor.getProperty("port." + i);
+			logDir = jvmToMonitor.getProperty("dir." + i);
 			i++;
-			System.err.println("Host " + host +":"+port);
+			System.err.println("Host " + host + ":" + port);
 			if (host == null)
 				break;
-			li = new LogInvoker(host, port, logDir, p);
+			li = new LogInvoker(host, port, logDir, jvmToMonitor);
 			new Thread(li).start();
 		}
 	}
@@ -130,8 +130,7 @@ public class JConsoleM {
 		}
 	}
 
-	private JConsoleM(String host, String port, Properties conf)
-			throws Exception {
+	private JConsoleM(String host, String port, Properties conf) throws Exception {
 		this.host = host;
 		this.port = port;
 		String urlStr = "service:jmx:rmi:///jndi/rmi://" + host + ":" + port + "/jmxrmi";
@@ -142,8 +141,7 @@ public class JConsoleM {
 		stats = new String[8];
 	}
 
-	public static JConsoleM getInstance(String host, String port,
-			Properties conf) {
+	public static JConsoleM getInstance(String host, String port, Properties conf) {
 		JConsoleM jc = null;
 
 		while (jc == null) {
@@ -164,8 +162,7 @@ public class JConsoleM {
 
 	public void logToFile(String line) {
 		Calendar c = Calendar.getInstance();
-		String name = dir + "/" + host + "_" + port + "_"
-				+ c.get(Calendar.YEAR);
+		String name = dir + "/" + host + "_" + port + "_" + c.get(Calendar.YEAR);
 		name += String.format("%02d", c.get(Calendar.MONTH) + 1);
 		name += String.format("%02d", c.get(Calendar.DAY_OF_MONTH));
 		try {
@@ -230,8 +227,7 @@ public class JConsoleM {
 		ObjectName mbeanName;
 		mbeanName = new ObjectName("java.lang:type=Memory");
 		CompositeDataSupport o;
-		o = (CompositeDataSupport) mbsc.getAttribute(mbeanName,
-				"HeapMemoryUsage");
+		o = (CompositeDataSupport) mbsc.getAttribute(mbeanName, "HeapMemoryUsage");
 		return ((Long) o.get("used")).longValue();
 	}
 
@@ -239,8 +235,7 @@ public class JConsoleM {
 		ObjectName mbeanName;
 		mbeanName = new ObjectName("java.lang:type=Memory");
 		CompositeDataSupport o;
-		o = (CompositeDataSupport) mbsc.getAttribute(mbeanName,
-				"NonHeapMemoryUsage");
+		o = (CompositeDataSupport) mbsc.getAttribute(mbeanName, "NonHeapMemoryUsage");
 		return ((Long) o.get("used")).longValue();
 	}
 
@@ -278,8 +273,7 @@ public class JConsoleM {
 
 	public long getEdenUsage() throws Exception {
 		ObjectName mbeanName;
-		mbeanName = new ObjectName(
-				"java.lang:type=MemoryPool,name=Par Eden Space");
+		mbeanName = new ObjectName("java.lang:type=MemoryPool,name=Par Eden Space");
 		CompositeDataSupport o;
 		o = (CompositeDataSupport) mbsc.getAttribute(mbeanName, "Usage");
 		return ((Long) o.get("used")).longValue();
@@ -288,8 +282,7 @@ public class JConsoleM {
 	public final void getDeadLockedThreads() throws Exception {
 		ObjectName mbeanName;
 		mbeanName = new ObjectName("java.lang:type=Threading");
-		long[] dl = (long[]) mbsc.invoke(mbeanName, "findDeadlockedThreads",
-				null, null);
+		long[] dl = (long[]) mbsc.invoke(mbeanName, "findDeadlockedThreads", null, null);
 		StringBuilder sb;
 		if (dl != null) {
 			sb = new StringBuilder();
@@ -327,8 +320,7 @@ public class JConsoleM {
 		echo("\nMBean count = " + mbsc.getMBeanCount());
 
 		echo("\nQuery MBeanServer MBeans:");
-		Set<ObjectName> names = new TreeSet<ObjectName>(mbsc.queryNames(null,
-				null));
+		Set<ObjectName> names = new TreeSet<ObjectName>(mbsc.queryNames(null, null));
 		for (ObjectName name : names) {
 			echo("\tObjectName = " + name);
 		}
@@ -382,47 +374,26 @@ class LogInvoker implements Runnable {
 		}
 	}
 
-	/**
-	 * @return the host
-	 */
 	public String getHost() {
 		return host;
 	}
 
-	/**
-	 * @param host
-	 *            the host to set
-	 */
 	public void setHost(String host) {
 		this.host = host;
 	}
 
-	/**
-	 * @return the port
-	 */
 	public String getPort() {
 		return port;
 	}
 
-	/**
-	 * @param port
-	 *            the port to set
-	 */
 	public void setPort(String port) {
 		this.port = port;
 	}
 
-	/**
-	 * @return the logDir
-	 */
 	public String getLogDir() {
 		return logDir;
 	}
 
-	/**
-	 * @param logDir
-	 *            the logDir to set
-	 */
 	public void setLogDir(String logDir) {
 		this.logDir = logDir;
 	}
