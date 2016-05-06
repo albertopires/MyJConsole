@@ -49,7 +49,6 @@ public class JConsoleM {
 	public String[] stats;
 
 	public static void main(String[] args) throws Exception {
-		System.err.println("Length " + args.length);
 		if ((args.length != 1)) {
 			System.err.println("JMX Monitor v1.0.1 - 05/May/2016");
 			System.err.println("Parameters: <config_file>\n");
