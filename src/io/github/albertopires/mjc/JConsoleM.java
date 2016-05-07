@@ -15,11 +15,8 @@
  */
 package io.github.albertopires.mjc;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
@@ -48,56 +45,12 @@ public class JConsoleM {
 	private String dir;
 	public String[] stats;
 
-	public static void main(String[] args) throws Exception {
-		System.err.println("Length " + args.length);
-		if ((args.length != 1)) {
-			System.err.println("JMX Monitor v1.0.1 - 05/May/2016");
-			System.err.println("Parameters: <config_file>\n");
-			System.err.println("Fields:");
-			System.err.println("0 - TimeStamp");
-			System.err.println("1 - CPU Usage");
-			System.err.println("2 - Heap Usage");
-			System.err.println("3 - Loaded Class Count");
-			System.err.println("4 - Thread Count");
-			System.err.println("5 - CMS Usage");
-			System.err.println("6 - Par Eden Usage");
-			System.err.println("7 - Non-Heap Usage");
-			System.err.println("8 - CMS Usage Threshold Count\n");
-			System.exit(1);
-		}
-
-		Properties jvmToMonitor = loadConfig(args[0]);
-		int i = 0;
-		String host, port, logDir;
-		LogInvoker li;
-		while (true) {
-			host = jvmToMonitor.getProperty("host." + i);
-			port = jvmToMonitor.getProperty("port." + i);
-			logDir = jvmToMonitor.getProperty("dir." + i);
-			i++;
-			System.err.println("Host " + host + ":" + port);
-			if (host == null)
-				break;
-			li = new LogInvoker(host, port, logDir, jvmToMonitor);
-			new Thread(li).start();
-		}
-	}
-
-	private static Properties loadConfig(String confFile) {
-		File f = new File(confFile);
-
-		Properties p = new Properties();
-
-		try {
-			FileInputStream fi = new FileInputStream(f);
-			p.load(fi);
-			return p;
-		} catch (IOException e) {
-			System.err.println(e.getMessage());
-			return null;
-		}
-	}
-
+	/**
+	 * Create a monitor instance (JConsoleM) for each pair host:port and save collected data to it's respective log file.
+	 * @param args
+	 * @param conf
+	 * @throws Exception
+	 */
 	public static void jvmLog(String[] args, Properties conf) throws Exception {
 		JConsoleM jc;
 		StringBuffer line;
@@ -144,6 +97,9 @@ public class JConsoleM {
 	public static JConsoleM getInstance(String host, String port, Properties conf) {
 		JConsoleM jc = null;
 
+		// At the time the instance is created, it is possible that the jvm to monitored is offline.
+		// In that case the connection will fail, if that happens wait 10 seconds and try again until
+		// a successful connection is obtained.
 		while (jc == null) {
 			try {
 				jc = new JConsoleM(host, port, conf);
@@ -157,9 +113,15 @@ public class JConsoleM {
 				System.err.println("InterruptedException : " + ex.getMessage());
 			}
 		}
+
 		return jc;
 	}
 
+	/**
+	 * Write a line with the data columns to host_port_date file. It creates one file per day.
+	 *
+	 * @param line
+	 */
 	public void logToFile(String line) {
 		Calendar c = Calendar.getInstance();
 		String name = dir + "/" + host + "_" + port + "_" + c.get(Calendar.YEAR);
@@ -295,21 +257,6 @@ public class JConsoleM {
 		}
 	}
 
-	public String[] getRcptList(Properties conf) {
-		int i = 0;
-		String addr;
-		ArrayList<String> addrList = new ArrayList<String>();
-		while (true) {
-			addr = conf.getProperty("mail.rcpto." + i);
-			i++;
-			if (addr != null)
-				addrList.add(addr);
-			if (addr == null)
-				break;
-		}
-		return addrList.toArray(new String[0]);
-	}
-
 	public void showInfo() throws Exception {
 		String domains[] = mbsc.getDomains();
 		Arrays.sort(domains);
@@ -344,57 +291,5 @@ public class JConsoleM {
 
 	public void setDir(String dir) {
 		this.dir = dir;
-	}
-}
-
-class LogInvoker implements Runnable {
-
-	private String host;
-	private String port;
-	private String logDir;
-	private Properties conf;
-
-	public LogInvoker(String host, String port, String logDir, Properties conf) {
-		this.host = host;
-		this.port = port;
-		this.logDir = logDir;
-		this.conf = conf;
-	}
-
-	@Override
-	public void run() {
-		String[] params = new String[3];
-		params[0] = host;
-		params[1] = port;
-		params[2] = logDir;
-		try {
-			JConsoleM.jvmLog(params, conf);
-		} catch (Exception ex) {
-			System.err.println("Thread Exception " + ex.getMessage());
-		}
-	}
-
-	public String getHost() {
-		return host;
-	}
-
-	public void setHost(String host) {
-		this.host = host;
-	}
-
-	public String getPort() {
-		return port;
-	}
-
-	public void setPort(String port) {
-		this.port = port;
-	}
-
-	public String getLogDir() {
-		return logDir;
-	}
-
-	public void setLogDir(String logDir) {
-		this.logDir = logDir;
 	}
 }
