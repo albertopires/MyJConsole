@@ -20,26 +20,32 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
+/**
+*
+* @author Alberto Pires de Oliveira Neto
+*/
 public class Main {
 
 	public static void main(String[] args) {
-		if ((args.length != 1)) {
-			System.err.println("JMX Monitor v1.0.1 - 06/May/2016");
-			System.err.println("Parameters: <config_file>\n");
+		if ((args.length != 2)) {
+			System.err.println("JMX Monitor v1.1.0-rc1 - 07/July/2016");
+			System.err.println("Parameters: <config_file> <bean_config_file>\n");
 			System.err.println("Fields:");
 			System.err.println("0 - TimeStamp");
 			System.err.println("1 - CPU Usage");
 			System.err.println("2 - Heap Usage");
 			System.err.println("3 - Loaded Class Count");
 			System.err.println("4 - Thread Count");
-			System.err.println("5 - CMS Usage");
-			System.err.println("6 - Par Eden Usage");
-			System.err.println("7 - Non-Heap Usage");
-			System.err.println("8 - CMS Usage Threshold Count\n");
+			System.err.println("5 - User defined Bean");
+			System.err.println(" .");
+			System.err.println(" .");
+			System.err.println("N - User defined Bean");
 			System.exit(1);
 		}
 
 		Properties jvmToMonitor = loadConfig(args[0]);
+		Properties beanConfProp = loadBeanConfig(args[1]);
+		BeanConf beanConf = new BeanConf(beanConfProp);
 		int i = 0;
 		String host, port, logDir;
 		LogThread li;
@@ -48,15 +54,30 @@ public class Main {
 			port = jvmToMonitor.getProperty("port." + i);
 			logDir = jvmToMonitor.getProperty("dir." + i);
 			i++;
-			System.err.println("Host " + host + ":" + port);
 			if (host == null)
 				break;
-			li = new LogThread(host, port, logDir, jvmToMonitor);
+			System.out.println("Creating thread for Host " + host + ":" + port);
+			li = new LogThread(host, port, logDir, jvmToMonitor, beanConf);
 			new Thread(li).start();
 		}
 	}
 
 	private static Properties loadConfig(String confFile) {
+		File f = new File(confFile);
+
+		Properties p = new Properties();
+
+		try {
+			FileInputStream fi = new FileInputStream(f);
+			p.load(fi);
+			return p;
+		} catch (IOException e) {
+			System.err.println(e.getMessage());
+			return null;
+		}
+	}
+
+	private static Properties loadBeanConfig(String confFile) {
 		File f = new File(confFile);
 
 		Properties p = new Properties();
@@ -79,12 +100,14 @@ class LogThread implements Runnable {
 	private String port;
 	private String logDir;
 	private Properties conf;
+	private BeanConf beanConf;
 
-	public LogThread(String host, String port, String logDir, Properties conf) {
+	public LogThread(String host, String port, String logDir, Properties conf, BeanConf beanConf) {
 		this.host = host;
 		this.port = port;
 		this.logDir = logDir;
 		this.conf = conf;
+		this.beanConf = beanConf;
 	}
 
 	@Override
@@ -94,7 +117,7 @@ class LogThread implements Runnable {
 		params[1] = port;
 		params[2] = logDir;
 		try {
-			JConsoleM.jvmLog(params, conf);
+			JConsoleM.jvmLog(params, conf, beanConf);
 		} catch (Exception ex) {
 			System.err.println("Thread Exception " + ex.getMessage());
 		}

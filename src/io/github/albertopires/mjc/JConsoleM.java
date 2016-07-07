@@ -17,6 +17,7 @@ package io.github.albertopires.mjc;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
@@ -43,7 +44,8 @@ public class JConsoleM {
 	private String host;
 	private String port;
 	private String dir;
-	public String[] stats;
+	private BeanConf beanConf;
+	public ArrayList<String> stats;
 
 	/**
 	 * Create a monitor instance (JConsoleM) for each pair host:port and save collected data to it's respective log file.
@@ -51,12 +53,12 @@ public class JConsoleM {
 	 * @param conf
 	 * @throws Exception
 	 */
-	public static void jvmLog(String[] args, Properties conf) throws Exception {
+	public static void jvmLog(String[] args, Properties conf, BeanConf beanConf) throws Exception {
 		JConsoleM jc;
 		StringBuffer line;
 
 		try {
-			jc = getInstance(args[0], args[1], conf);
+			jc = getInstance(args[0], args[1], conf, beanConf);
 			jc.setDir(args[2]);
 			jc.setSample(4000);
 
@@ -66,14 +68,14 @@ public class JConsoleM {
 					line = new StringBuffer();
 					Date d = new Date();
 					line.append("" + d.getTime() + " ");
-					for (int s = 0; s < jc.stats.length; s++) {
-						line.append(jc.stats[s] + " ");
+					for (String stat : jc.stats) {
+						line.append(stat + " ");
 					}
 					line.append("\n");
 					jc.logToFile(line.toString());
 				} catch (Exception e) {
 					System.err.println("Loop Exception : " + e.getMessage());
-					jc = getInstance(args[0], args[1], conf);
+					jc = getInstance(args[0], args[1], conf, beanConf);
 					jc.setDir(args[2]);
 					jc.setSample(4000);
 				}
@@ -83,18 +85,20 @@ public class JConsoleM {
 		}
 	}
 
-	private JConsoleM(String host, String port, Properties conf) throws Exception {
+	private JConsoleM(String host, String port, Properties conf, BeanConf beanConf) throws Exception {
 		this.host = host;
 		this.port = port;
+		this.beanConf = beanConf;
+		this.stats = new ArrayList<String>();
+
 		String urlStr = "service:jmx:rmi:///jndi/rmi://" + host + ":" + port + "/jmxrmi";
 		JMXServiceURL url = new JMXServiceURL(urlStr);
 		JMXConnector jmxc = JMXConnectorFactory.connect(url, null);
 		mbsc = jmxc.getMBeanServerConnection();
 		ncpu = getAvailableProcessors();
-		stats = new String[8];
 	}
 
-	public static JConsoleM getInstance(String host, String port, Properties conf) {
+	public static JConsoleM getInstance(String host, String port, Properties conf, BeanConf beanConf) {
 		JConsoleM jc = null;
 
 		// At the time the instance is created, it is possible that the jvm to monitored is offline.
@@ -102,7 +106,7 @@ public class JConsoleM {
 		// a successful connection is obtained.
 		while (jc == null) {
 			try {
-				jc = new JConsoleM(host, port, conf);
+				jc = new JConsoleM(host, port, conf, beanConf);
 			} catch (Exception ex) {
 				jc = null;
 			}
@@ -137,14 +141,17 @@ public class JConsoleM {
 	}
 
 	public void runStats() throws Exception {
-		stats[0] = String.format("%.2f", getCpuUsage());
-		stats[1] = "" + getHeapUsage();
-		stats[2] = "" + getLoadedClassCount();
-		stats[3] = "" + getThreadCount();
-		stats[4] = "" + getCMSUsage();
-		stats[5] = "" + getEdenUsage();
-		stats[6] = "" + getNonHeapUsage();
-		stats[7] = "" + getCMSUsageThresholdCount();
+		stats.clear();
+		stats.add(String.format("%.2f", getCpuUsage())); // 1
+		stats.add("" + getHeapUsage());                  // 2
+		stats.add("" + getLoadedClassCount());           // 3
+		stats.add("" + getThreadCount());                // 4
+
+		for (String[] bean : beanConf.getBeans()) {
+			String stat = getBean(bean[BeanConf.NAME], bean[BeanConf.ATTR0], bean[BeanConf.ATTR1]);
+			stats.add(stat);
+		}
+
 		getDeadLockedThreads();
 	}
 
@@ -193,12 +200,12 @@ public class JConsoleM {
 		return ((Long) o.get("used")).longValue();
 	}
 
-	public long getNonHeapUsage() throws Exception {
+	public String getNonHeapUsage() throws Exception {
 		ObjectName mbeanName;
 		mbeanName = new ObjectName("java.lang:type=Memory");
 		CompositeDataSupport o;
 		o = (CompositeDataSupport) mbsc.getAttribute(mbeanName, "NonHeapMemoryUsage");
-		return ((Long) o.get("used")).longValue();
+		return o.get("used").toString();
 	}
 
 	public int getThreadCount() throws Exception {
@@ -217,28 +224,16 @@ public class JConsoleM {
 		return ut.intValue();
 	}
 
-	public long getCMSUsageThresholdCount() throws Exception {
+	public String getBean(String objectName, String attribute0, String attribute1) throws Exception {
 		ObjectName mbeanName;
-		mbeanName = new ObjectName("java.lang:type=MemoryPool,name=CMS Old Gen");
-		Long ut;
-		ut = (Long) mbsc.getAttribute(mbeanName, "UsageThresholdCount");
-		return ut.longValue();
-	}
-
-	public long getCMSUsage() throws Exception {
-		ObjectName mbeanName;
-		mbeanName = new ObjectName("java.lang:type=MemoryPool,name=CMS Old Gen");
+		mbeanName = new ObjectName(objectName);
 		CompositeDataSupport o;
-		o = (CompositeDataSupport) mbsc.getAttribute(mbeanName, "Usage");
-		return ((Long) o.get("used")).longValue();
-	}
-
-	public long getEdenUsage() throws Exception {
-		ObjectName mbeanName;
-		mbeanName = new ObjectName("java.lang:type=MemoryPool,name=Par Eden Space");
-		CompositeDataSupport o;
-		o = (CompositeDataSupport) mbsc.getAttribute(mbeanName, "Usage");
-		return ((Long) o.get("used")).longValue();
+		if (attribute1 == null) {
+			Object obj = mbsc.getAttribute(mbeanName, attribute0);
+			return obj.toString();
+		}
+		o = (CompositeDataSupport) mbsc.getAttribute(mbeanName, attribute0);
+		return o.get(attribute1).toString();
 	}
 
 	public final void getDeadLockedThreads() throws Exception {
