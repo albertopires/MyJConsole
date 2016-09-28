@@ -5,8 +5,16 @@ The idea of MyJConsole is to collect the same data as the standard java **jconso
 
 ## How it works ##
 
-It's quite simple, you just run the **JConsoleM** class using a configuration file as parameter.
-The configuration file is quite simple and you can build one from the file **sample.conf**.
+It's quite simple, you just run:
+
+``java -jar my-jconsole-x.y.z ./sample.conf ./sample_bean.conf ``
+
+The configuration file is quite simple and you can build one from the template file **sample.conf**.
+There are four default mbeans monitored, other can be configured using the template file **sample_bean**. There are two examples:
+
+* sample_bean_jdk6.conf
+* sample_bean_jdk8.conf
+
 The mbeans will be written to a file name ipaddr_port_YYYYMMDD and the columns are:
 
 
@@ -17,15 +25,17 @@ Fields:
 2 - Heap Usage
 3 - Loaded Class Count
 4 - Thread Count
-5 - CMS Usage
-6 - Par Eden Usage
-7 - Non-Heap Usage
-8 - CMS Usage Threshold Count
+5 - User configured bean
+  .
+  .
+N - User configured bean
 ```
 
 
 ## Requirements ##
-For the moment, this tool is tested only for jdk6 (bummer), and to collect specific beans from an specific **gc** configuration, usually used on web servers. I wrote this tool to solve a quit problem, it's not very flexible yet. But until it is here is the options you should use on your jvm.
+It uses java JDK 8. As far as I've tested it can monitor jdk's 6 to 8.
+
+An example of jdk options to test with **sample_bean_jdk6.conf**
 
 * -XX:ParallelGCThreads=5
 * -XX:+UseConcMarkSweepGC
@@ -42,3 +52,15 @@ or just copy and paste:
 -Dcom.sun.management.jmxremote.authenticate=false
 -Dcom.sun.management.jmxremote.ssl=false
 -Dcom.sun.management.jmxremote.port=7001`
+
+An example of jdk options to test with **sample_bean_jdk8.conf**
+
+* -XX:+UseG1GC
+* -Dcom.sun.management.jmxremote.port=7001
+* -Dcom.sun.management.jmxremote.authenticate=false
+* -Dcom.sun.management.jmxremote.ssl=false
+
+or just copy and paste:
+
+`-XX:+UseG1GC
+-Dcom.sun.management.jmxremote.port=7001 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false`
